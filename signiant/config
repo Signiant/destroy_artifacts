@@ -1,5 +1,16 @@
-[artifactconfig]
-ENVIRONMENT_VARIABLES = ["PROJECT_FAMILY", "PROJECT_TITLE", "PROJECT_BRANCH"]
-DEPLOYMENT_PATHS = ["OTTAS06_ARTS_PATH_WIN", "OTTAS06_ARTS_PATH_LINUX", "OTTAS06_ARTS_PATH_MAC", "S3_BASE", "DEPLOY_UNIX_BASE_PATH", "DEPLOY_WIN_BASE_PATH"]
-DEPLOYMENT_STRUCTURES = ["/Build-$BUILD_NUMBER"]
-IGNORE_JOBS = []
+###
+# Config for the artifact destoyer
+# Seperate values with commas. It's pretty rudimentary, so don't expect miracles
+#
+# ENVIRONMENT_VARIABLES = Required environment variables to determine artifact paths. If any of these don't exist the job will be skipped over.
+# DEPLOYMENT_PATHS = The paths that a build MAY be deployed to. It will have a regex expression that will try to replace any string with $ infront of it with an environment variable value.
+# DEPLOYMENT_STRUCUTURES = The build folder string
+# IGNORE_JOBS = Job names included in here will be skipped (CURRENTLY NOT IMPLEMENTED)
+# STRIP_ROOT = Strip all deployment paths so they start with the specified root. Will convert Windows style paths to UNIX paths
+###
+[ArtifactConfig]
+ENVIRONMENT_VARIABLES=PROJECT_FAMILY,PROJECT_TITLE,PROJECT_BRANCH
+DEPLOYMENT_PATHS=OTTAS06_ARTS_PATH_WIN,OTTAS06_ARTS_PATH_LINUX,OTTAS06_ARTS_PATH_MAC,S3_BASE,DEPLOY_UNIX_BASE_PATH,DEPLOY_WIN_BASE_PATH,DEPLOY_PATH
+DEPLOYMENT_STRUCTURES=Build-$BUILD_NUMBER
+IGNORE_JOBS=
+STRIP_ROOT=Release/Jenkins
