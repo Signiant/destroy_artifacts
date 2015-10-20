@@ -7,10 +7,11 @@
 # DEPLOYMENT_STRUCUTURES = The build folder string
 # IGNORE_JOBS = Job names included in here will be skipped (CURRENTLY NOT IMPLEMENTED)
 # STRIP_ROOT = Strip all deployment paths so they start with the specified root. Will convert Windows style paths to UNIX paths
+#   *** strip root uses a dictionary, seperate  key/val with colon :
 ###
 [ArtifactConfig]
 ENVIRONMENT_VARIABLES=PROJECT_FAMILY,PROJECT_TITLE,PROJECT_BRANCH
 DEPLOYMENT_PATHS=OTTAS06_ARTS_PATH_WIN,OTTAS06_ARTS_PATH_LINUX,OTTAS06_ARTS_PATH_MAC,S3_BASE,DEPLOY_UNIX_BASE_PATH,DEPLOY_WIN_BASE_PATH,DEPLOY_PATH
 DEPLOYMENT_STRUCTURES=Build-$BUILD_NUMBER
 IGNORE_JOBS=
-STRIP_ROOT=Release/Jenkins
+STRIP_ROOT=$PROJECT_FAMILY:/Releases/Jenkins/$PROJECT_FAMILY

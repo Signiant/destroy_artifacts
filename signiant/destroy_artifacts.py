@@ -3,7 +3,7 @@ import sys,os
 from argparse import ArgumentParser
 from ConfigParser import RawConfigParser
 from maestro.jenkins.jobs import EnvironmentVariableJobEntry, InvalidEntryError
-from maestro.string.string import replaceall
+from maestro.tools import string.replaceall
 
 # Globals used throughout the script
 VERBOSE = False
@@ -16,7 +16,7 @@ JENKINS_JOBS_DIRECTORY_PATH = "/var/lib/jenkins/jobs"
 IS_DRY_RUN = True
 
 #ARG: Where is the config file stored?
-CONFIG_PATH = os.path.join("/tmp/destroy_artifacts-master/signiant/config")
+CONFIG_PATH = os.path.join("./config")
 
 #CONFIG: REQUIRED environment variables
 ENVIRONMENT_VARIABLES = []
@@ -30,6 +30,10 @@ BUILD_STRUCTURES = []
 
 #Jobs to ignore
 IGNORE_JOBS = []
+
+#Where to strip the deployment paths.
+#Signiant: strip on $PROJECT_FAMILY, and prepend /Releases/Jenkins
+STRIP_ROOT = {}
 
 def __get_undeleted_artifact_paths__(entry):
     if not isinstance(entry, EnvironmentVariableJobEntry) or entry is None:
@@ -49,6 +53,7 @@ def __parse_config__(config_file_path):
     global DEPLOYMENT_PATHS
     global DEPLOYMENT_STRUCTURES
     global IGNORE_JOBS
+    global STRIP_ROOT
 
     config = RawConfigParser()
     config.read(config_file_path)
@@ -67,6 +72,13 @@ def __parse_config__(config_file_path):
         raise
     try:
         IGNORE_JOBS = config.get("ArtifactConfig","IGNORE_JOBS").split(',')
+    except:
+        raise
+    try:
+        entries = config.get("ArtifactConfig","STRIP_ROOT").split(',')
+        for entry in entries:
+            keyval = entry.strip(":")
+            STRIP_ROOT[keyval[0]] = keyval[1]
     except:
         raise
 
@@ -91,7 +103,8 @@ def __get_release_path_list__(entry):
                         string_replace[str("$" + var)] = entry.environment_variables[var]
                     except KeyError:
                         continue
-                formatted_release_path = replaceall(string_replace, entry.environment_variables[key])
+                converted_release_path = __strip_release_path(entry.environment_variables[key])
+                formatted_release_path = string.replaceall(string_replace, entry.environment_variables[key])
                 releases.append(formatted_release_path)
             except KeyError as e:
                 #print str(e)
@@ -106,6 +119,13 @@ def __get_release_path_list__(entry):
 
 def __parse_arguments__():
     pass
+
+def __strip_release_path__(release_path):
+    clean_path = release_path.replace('\\','/')
+    converted_path = os.path.abspath(clean_path)
+    key = STRIP_ROOT.keys()[0]
+    stripped_path = converted_path.split("key")
+    return os.path.join(STRIP_ROOT[key],stripped_path)
     
 
 def destroy_artifacts(is_dry_run):
@@ -124,8 +144,8 @@ def destroy_artifacts(is_dry_run):
             release_paths = __get_release_path_list__(entry)
             if release_paths is not None:
                 print entry.name
-            #    for release in release_paths: 
-            #        print release
+                for release in release_paths: 
+                    print release
         #If there's no match to any of the keys, then we don't care about this entry
         except TypeError:
             continue
