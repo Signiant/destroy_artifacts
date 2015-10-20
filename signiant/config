@@ -6,12 +6,14 @@
 # DEPLOYMENT_PATHS = The paths that a build MAY be deployed to. It will have a regex expression that will try to replace any string with $ infront of it with an environment variable value.
 # DEPLOYMENT_STRUCUTURES = The build folder string
 # IGNORE_JOBS = Job names included in here will be skipped (CURRENTLY NOT IMPLEMENTED)
-# STRIP_ROOT = Strip all deployment paths so they start with the specified root. Will convert Windows style paths to UNIX paths
-#   *** strip root uses a dictionary, seperate  key/val with colon :
+# SPLIT_TOKEN = The token which to split a deployment path on. It should be something common
 ###
 [ArtifactConfig]
 ENVIRONMENT_VARIABLES=PROJECT_FAMILY,PROJECT_TITLE,PROJECT_BRANCH
 DEPLOYMENT_PATHS=OTTAS06_ARTS_PATH_WIN,OTTAS06_ARTS_PATH_LINUX,OTTAS06_ARTS_PATH_MAC,S3_BASE,DEPLOY_UNIX_BASE_PATH,DEPLOY_WIN_BASE_PATH,DEPLOY_PATH
 DEPLOYMENT_STRUCTURES=Build-$BUILD_NUMBER
+BUILD_FOLDER_REGEX=
 IGNORE_JOBS=
-STRIP_ROOT=$PROJECT_FAMILY,/Releases/Jenkins/$PROJECT_FAMILY
+SPLIT_TOKEN=$PROJECT_FAMILY
+PREPEND_STRING=/Releases/Jenkins/$PROJECT_FAMILY/
+APPEND_STRING="/"
