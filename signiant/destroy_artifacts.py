@@ -269,7 +269,7 @@ def destroy_artifacts():
         print "Deleting " + str(artifact_path)
         cleaned_byte_count = path.get_tree_size(artifact_path) + cleaned_byte_count
         if not IS_DRY_RUN:
-            pass #shutil.rmtree(artifact_path)
+            shutil.rmtree(artifact_path, ignore_errors=False)
 
     if IS_DRY_RUN:
         print "Would have cleaned up " + str(cleaned_byte_count) + " bytes!"
