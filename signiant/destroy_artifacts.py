@@ -6,6 +6,7 @@ Goes through current jobs in Jenkins and finds artifacts that have been deleted 
 
 import sys,os
 
+from getopt import getopt,GetoptError
 from argparse import ArgumentParser
 from ConfigParser import RawConfigParser
 from maestro.jenkins.jobs import EnvironmentVariableJobEntry, InvalidEntryError
@@ -20,10 +21,10 @@ DEBUG = False
 JENKINS_JOBS_DIRECTORY_PATH = "/var/lib/jenkins/jobs"
 
 #ARG: Don't actually delete anything, but list what would be deleted
-IS_DRY_RUN = True
+IS_DRY_RUN = False
 
 #ARG: Where is the config file stored?
-CONFIG_PATH = os.path.join("./config")
+CONFIG_PATH = "./config"
 
 #CONFIG: REQUIRED environment variables
 ENVIRONMENT_VARIABLES = []
@@ -52,20 +53,20 @@ APPEND_STRING = ""
 #Tracks dupicates by having $PROJECT_FAMILY:$PROJECT_TITLE:$PROJECT_BRANCH as a key, and the name of the entry as a value (for error messaging)
 __duplicate_tracker__ = dict()
 
-#Tracks duplicate errors
+#List of found duplicates
 __duplicates__ = list()
 
 #We pass in undeleted_paths set in order to avoid duplicates, and get an accurate byte clean up count
 #Makes it fairly slow, but whatever. It's still under a minute for scanning the entire thing
 
-def __get_undeleted_artifact_paths__(entry, release_paths, undeleted_paths_set = None):
+def __get_undeleted_artifact_paths__(entry, release_paths, undeleted_paths_dict = None):
     """
     Loop through release paths and see if we can find anything with Build-XXX, strip the number out and compare to the job entry. Put all ones not in the job entry into a set.
     """
     if not isinstance(entry, EnvironmentVariableJobEntry) or entry is None:
         raise TypeError("You must pass in a EnvironmentVariableJobEntry!")
-    if undeleted_paths_set is None:
-        undeleted_paths_set = set()
+    if undeleted_paths_dict is None:
+        undeleted_paths_dict = dict()
     for path in release_paths:
         #TODO: Find a better way to do this
         #We need to strip off any deploy path that has Build-$BUILD_NUMBER at the end
@@ -78,14 +79,17 @@ def __get_undeleted_artifact_paths__(entry, release_paths, undeleted_paths_set =
                     #TODO: Find a better way to do this (dont rely on Build-XXX)
                     build_no = subdir.split("-")[1]
                     if build_no not in entry.get_build_number_list():
-                        undeleted_paths_set.add(os.path.join(path,subdir))
-                except IndexError:
+                        #print str(entry.get_build_number_list()) + "  " + str(build_no)
+                        undeleted_paths_dict[os.path.join(path,subdir)] = entry
+                except IndexError as e:
                     #Unrecognized build directory
+                    #print e
                     continue
-        except OSError:
+        except OSError as e:
             #There are no deployed artifacts for this directory
+            #print e
             continue
-    return undeleted_paths_set
+    return undeleted_paths_dict
 
 def __enumerate_remote_artifact_config_entries__(jobs_path):
     """
@@ -94,6 +98,7 @@ def __enumerate_remote_artifact_config_entries__(jobs_path):
     for root, dirnames, filenames in os.walk(jobs_path):
         if "config.xml" in filenames:
             try:
+                #print root
                 yield EnvironmentVariableJobEntry(root)
             except InvalidEntryError as e:
                 if VERBOSE == 1:
@@ -194,7 +199,13 @@ def __parse_arguments__():
     """
     Currently unused and uses defaults defined above
     """
-    pass
+    global IS_DRY_RUN
+    try:
+        if sys.argv[1] == "-n" or sys.argv[1] == "--dry-run":
+            IS_DRY_RUN = True
+    except IndexError:
+        #Not a dry run..
+        pass
 
 def __strip_release_path__(release_path):
     """
@@ -214,6 +225,9 @@ def destroy_artifacts():
     if not os.path.exists(CONFIG_PATH):
         raise ValueError("You need to provide a valid config file! Currently looking for: " + str(CONFIG_PATH))
 
+    #Parse arguments
+    __parse_arguments__()
+
     #Parse config file
     __parse_config__(CONFIG_PATH)
 	
@@ -221,44 +235,37 @@ def destroy_artifacts():
     cleaned_byte_count = 0
 
     #Set containing ALL the paths to be deleted
-    undeleted_paths_set = set()
+    undeleted_paths_dict = dict()
 
     #First we want to go through the config entries that contain Environment Variables from envinject
     for entry in __enumerate_remote_artifact_config_entries__(JENKINS_JOBS_DIRECTORY_PATH):
-        if entry.name == "Media Shuttle Store-mjc":
-            print "Found it!"
-        if entry.get_build_number_list() is None:
+        #Safety net... if there's NO builds, we shouldn't clean anything up
+        if entry.get_build_number_list() is None or len(entry.builds_in_jenkins) == 0:
             continue
         try:
-            if entry.name == "Media Shuttle Store-mjc":
-                print "Bef env"
             __verify_environment_variables__(entry)
-            if entry.name == "Media Shuttle Store-mjc":
-                print "Bef dup"
             __verify_duplicates__(entry)
-            if entry.name == "Media Shuttle Store-mjc":
-                print "Bef rel"
             release_paths = __get_release_path_list__(entry)
             if release_paths is not None:
-                for undeleted_artifact_path in __get_undeleted_artifact_paths__(entry,release_paths,undeleted_paths_set):
+                for undeleted_artifact_path in __get_undeleted_artifact_paths__(entry,release_paths,undeleted_paths_dict):
                     pass #Building set...
         #If there's no match to any of the keys, then we don't care about this entry
-        except TypeError:
-            if entry.name == "Media Shuttle Store-mjc":
-                raise
+        except TypeError as e:
+            #print str(e)
             continue
         #If the job doesn't have the variables we're looking for, skip over it
-        except InvalidEntryError:
-            if entry.name == "Media Shuttle Store-mjc":
-                raise
+        except InvalidEntryError as e:
+            #print str(e)
             continue
 
-    #Loop through the (now) unique path list so we can get the size and delete 
-    for artifact_path in undeleted_paths_set:
+    #Loop through the (now) unique path list so we can get the size and delete
+    for artifact_path in undeleted_paths_dict.keys():
+        if undeleted_paths_dict[artifact_path].name in __duplicates__:
+            print "Not deleting duplicate: " + artifact_path
         print "Deleting " + str(artifact_path)
         cleaned_byte_count = path.get_tree_size(artifact_path) + cleaned_byte_count
         if not IS_DRY_RUN:
-            pass #Delete things here
+            shutil.rmtree(artifact_path)
 
     if IS_DRY_RUN:
         print "Would have cleaned up " + str(cleaned_byte_count) + " bytes!"
@@ -268,7 +275,8 @@ def destroy_artifacts():
     if len(__duplicates__) > 0:
         print "The job failed because of the following errors:"
         for duplicate in __duplicates__:
-            print duplicate
+            key = str(duplicate.environment_variables["PROJECT_FAMILY"] + "/" + duplicate.environment_variables["PROJECT_TITLE"] + "/" + duplicate.environment_variables["PROJECT_BRANCH"])
+            print "Attempted to parse entry with name '" + str(duplicate.name) + "' but entry with name '" + str(__duplicate_tracker__[key]) + "' is currently using the same deployment strategy: " + key
         sys.exit(1)
 
 #TODO: Make less Signiant specific
@@ -280,8 +288,7 @@ def __verify_duplicates__(entry):
     key = str(entry.environment_variables["PROJECT_FAMILY"] + "/" + entry.environment_variables["PROJECT_TITLE"] + "/" + entry.environment_variables["PROJECT_BRANCH"])
     #Check for duplicate
     if key in __duplicate_tracker__.keys():
-        print "DUPLICATE"
-        __duplicates__.append("Attempted to parse entry with name " + str(entry.name) + " but entry with name " + str(__duplicate_tracker__[key]) + " is currently using the same deployment strategy: " + key)
+        __duplicates__.append(entry)
         raise InvalidEntryError("Found a duplicate entry! Please see error message at the end of the script.")
     else:
         __duplicate_tracker__[key] = entry.name
