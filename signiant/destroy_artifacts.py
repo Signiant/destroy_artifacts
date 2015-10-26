@@ -263,12 +263,13 @@ def destroy_artifacts():
 
     #Loop through the (now) unique path list so we can get the size and delete
     for artifact_path in undeleted_paths_dict.keys():
-        if undeleted_paths_dict[artifact_path].name in __duplicates__:
+        if undeleted_paths_dict[artifact_path].name in [d.name for d in __duplicates__]:
             print "Not deleting duplicate: " + artifact_path
+            continue
         print "Deleting " + str(artifact_path)
         cleaned_byte_count = path.get_tree_size(artifact_path) + cleaned_byte_count
         if not IS_DRY_RUN:
-            shutil.rmtree(artifact_path)
+            pass #shutil.rmtree(artifact_path)
 
     if IS_DRY_RUN:
         print "Would have cleaned up " + str(cleaned_byte_count) + " bytes!"
@@ -279,7 +280,7 @@ def destroy_artifacts():
         print "The job failed because of the following errors:"
         for duplicate in __duplicates__:
             key = str(duplicate.environment_variables["PROJECT_FAMILY"] + "/" + duplicate.environment_variables["PROJECT_TITLE"] + "/" + duplicate.environment_variables["PROJECT_BRANCH"])
-            print "Attempted to parse entry with name '" + str(duplicate.name) + "' but entry with name '" + str(__duplicate_tracker__[key]) + "' is currently using the same deployment strategy: " + key
+            print "Attempted to parse entry with name '" + str(duplicate.name) + "' but entry with name '" + str(__duplicate_tracker__[key].name) + "' is currently using the same deployment strategy: " + key
         sys.exit(1)
 
 #TODO: Make less Signiant specific
@@ -292,9 +293,10 @@ def __verify_duplicates__(entry):
     #Check for duplicate
     if key in __duplicate_tracker__.keys():
         __duplicates__.append(entry)
+        __duplicates__.append(__duplicate_tracker__[key])
         raise InvalidEntryError("Found a duplicate entry! Please see error message at the end of the script.")
     else:
-        __duplicate_tracker__[key] = entry.name
+        __duplicate_tracker__[key] = entry
 
 if __name__ == "__main__":
     destroy_artifacts()
