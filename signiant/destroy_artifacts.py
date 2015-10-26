@@ -267,8 +267,12 @@ def destroy_artifacts():
             print "Not deleting duplicate: " + artifact_path
             continue
         print "Deleting " + str(artifact_path)
-        cleaned_byte_count = path.get_tree_size(artifact_path) + cleaned_byte_count
+        try:
+            cleaned_byte_count = path.get_tree_size(artifact_path) + cleaned_byte_count
+        except Exception as e:
+            print str(e)
         if not IS_DRY_RUN:
+            print "Deleting..."
             shutil.rmtree(artifact_path, ignore_errors=False)
 
     if IS_DRY_RUN:
