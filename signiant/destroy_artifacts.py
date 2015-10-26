@@ -272,8 +272,11 @@ def destroy_artifacts():
         except Exception as e:
             print str(e)
         if not IS_DRY_RUN:
-            print "Deleting..."
-            shutil.rmtree(artifact_path, ignore_errors=False)
+            try:
+                shutil.rmtree(artifact_path, ignore_errors=False)
+            except OSError as e:
+                print "WARNING: Unable to delete " + artifact_path + " due to:"
+                print str(e)
 
     if IS_DRY_RUN:
         print "Would have cleaned up " + str(cleaned_byte_count) + " bytes!"
