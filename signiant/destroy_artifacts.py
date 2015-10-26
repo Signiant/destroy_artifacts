@@ -4,7 +4,10 @@ destroy_artifacts.py
 Goes through current jobs in Jenkins and finds artifacts that have been deleted in Jenkins, but not in the artifact share. Sort of flexible, but it ties into Signiant's current build patterns fairly tightly in some areas.
 """
 
-import sys,os
+import sys,os,shutil
+
+reload(sys)  
+sys.setdefaultencoding('utf8')
 
 from getopt import getopt,GetoptError
 from argparse import ArgumentParser
