@@ -245,6 +245,9 @@ def destroy_artifacts():
         #Safety net... if there's NO builds, we shouldn't clean anything up
         if entry.get_build_number_list() is None or len(entry.builds_in_jenkins) == 0:
             continue
+        #Skip disabled entries
+        if entry.disabled is True:
+            continue
         try:
             __verify_environment_variables__(entry)
             __verify_duplicates__(entry)
