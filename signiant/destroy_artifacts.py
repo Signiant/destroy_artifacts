@@ -6,13 +6,13 @@ Goes through current jobs in Jenkins and finds artifacts that have been deleted 
 
 import sys,os,shutil
 
-reload(sys)  
+reload(sys)
 sys.setdefaultencoding('utf8')
 
 from getopt import getopt,GetoptError
 from argparse import ArgumentParser
 from ConfigParser import RawConfigParser
-from maestro.jenkins.jobs import EnvironmentVariableJobEntry, InvalidEntryError
+from maestro.jenkins.jobs import EnvironmentVariableJobEntry, InvalidEntryError, parse_build_into_environment_variable_job_entry
 from maestro.tools import string, path
 
 ## Globals used throughout the script
@@ -20,7 +20,7 @@ from maestro.tools import string, path
 VERBOSE = False
 DEBUG = False
 
-#ARG: Which Jenkins instance are we targetting? 
+#ARG: Which Jenkins instance are we targetting?
 JENKINS_JOBS_DIRECTORY_PATH = "/var/lib/jenkins/jobs"
 
 #ARG: Don't actually delete anything, but list what would be deleted
@@ -42,12 +42,12 @@ BUILD_FOLDER_REGEX = ""
 #CONFIG: Jobs to ignore (use the job name)
 IGNORE_JOBS = []
 
-#CONFIG: Where to split the deployment paths, the script takes the second index ( [1] ) 
+#CONFIG: Where to split the deployment paths, the script takes the second index ( [1] )
 #Signiant: Default in config is to split on $PROJECT_FAMILY
 SPLIT_TOKEN = ""
 
 #CONFIG: What to prepend to the string[1] from deployment path split with SPLIT_TOKEN
-#Signiant: Default in config is to 
+#Signiant: Default in config is to
 PREPEND_STRING = ""
 
 #CONFIG: What to append to the  string[1] frpm deployment path split with SPLIT_TOKEN
@@ -75,7 +75,7 @@ def __get_undeleted_artifact_paths__(entry, release_paths, undeleted_paths_dict 
         #We need to strip off any deploy path that has Build-$BUILD_NUMBER at the end
         if path.endswith("$BUILD_NUMBER"):
             #This is kind of neat. Prepend a slash, and unpack the list returned from path.split without the last element and join it
-            path = os.path.join("/",*path.split("/")[:-1]) 
+            path = os.path.join("/",*path.split("/")[:-1])
         try:
             for subdir in os.listdir(path):
                 try:
@@ -87,6 +87,9 @@ def __get_undeleted_artifact_paths__(entry, release_paths, undeleted_paths_dict 
                 except IndexError as e:
                     #Unrecognized build directory
                     #print e
+                    continue
+                except TypeError as e:
+                    #No builds in directorys
                     continue
         except OSError as e:
             #There are no deployed artifacts for this directory
@@ -102,7 +105,7 @@ def __enumerate_remote_artifact_config_entries__(jobs_path):
         if "config.xml" in filenames:
             try:
                 #print root
-                yield EnvironmentVariableJobEntry(root)
+                yield parse_build_into_environment_variable_job_entry(root)
             except InvalidEntryError as e:
                 if VERBOSE == 1:
                     print "Skipping over " + str(root)
@@ -122,7 +125,7 @@ def __parse_config__(config_file_path):
 
     config = RawConfigParser()
     config.read(config_file_path)
-    # I wrapped these in trys just in case we want something optional 
+    # I wrapped these in trys just in case we want something optional
     try:
         ENVIRONMENT_VARIABLES = config.get("ArtifactConfig","ENVIRONMENT_VARIABLES").split(',')
     except:
@@ -167,7 +170,7 @@ def __verify_environment_variables__(entry):
             print str(entry.environment_variables.keys())
         if var not in entry.environment_variables.keys() or entry.environment_variables[var] is None:
             raise InvalidEntryError("Required environment variable " + str(var) + " was not found in job entry " + str(entry.name) + ".")
-       
+
 def __get_release_path_list__(entry):
     """
     Builds a string replace dictionary out of the environment variables, calls __strip_release_path__, replaces the $VARIABLES with their values (if found), normalizes the path and adds it to a list which is returned by this method.
@@ -181,7 +184,7 @@ def __get_release_path_list__(entry):
                     string_replace[str("$" + var)] = entry.environment_variables[var]
                 except KeyError:
                     continue
-            converted_release_path = __strip_release_path__(entry.environment_variables[key])
+            converted_release_path = __strip_release_path__(entry.environment_variables[key],entry.environment_variables)
             if converted_release_path is None:
                 continue
             replaced_release_path = string.replaceall(string_replace, converted_release_path)
@@ -196,7 +199,7 @@ def __get_release_path_list__(entry):
     if len(releases) == 0:
         return None
     else:
-        return releases 
+        return releases
 
 def __parse_arguments__():
     """
@@ -210,19 +213,19 @@ def __parse_arguments__():
         #Not a dry run..
         pass
 
-def __strip_release_path__(release_path):
+def __strip_release_path__(release_path, environment_variables):
     """
     Converts UNC/Windows paths into forward slashes, and then splits and pre/appends
     """
-
+   # print("In path: " + str(release_path))
     try:
-        clean_path = release_path.replace('\\','/')
-#        converted_path = os.path.abspath(clean_path)
-        stripped_path = clean_path.split(SPLIT_TOKEN)
-        return PREPEND_STRING + stripped_path[1] + APPEND_STRING
-    except:
+        clean_path = release_path.replace('\\','/').strip()
+        split_token = environment_variables[SPLIT_TOKEN].strip()
+        stripped_path = clean_path.split(split_token)
+        return PREPEND_STRING + split_token + "/" + stripped_path[1] + APPEND_STRING
+    except Exception as e:
+        print str("Exception: " + str(e))
         return None
-    
 
 def destroy_artifacts():
     if not os.path.exists(CONFIG_PATH):
@@ -233,7 +236,7 @@ def destroy_artifacts():
 
     #Parse config file
     __parse_config__(CONFIG_PATH)
-	
+
     #Bytes cleaned up
     cleaned_byte_count = 0
 
@@ -310,6 +313,3 @@ def __verify_duplicates__(entry):
 
 if __name__ == "__main__":
     destroy_artifacts()
-
-
-    
