@@ -222,7 +222,7 @@ def __strip_release_path__(release_path, environment_variables):
         clean_path = release_path.replace('\\','/').strip()
         split_token = environment_variables[SPLIT_TOKEN].strip()
         stripped_path = clean_path.split(split_token)
-        return PREPEND_STRING + split_token + "/" + stripped_path[1] + APPEND_STRING
+        return PREPEND_STRING + split_token + stripped_path[1] + APPEND_STRING
     except Exception as e:
         print str("Exception: " + str(e))
         return None
