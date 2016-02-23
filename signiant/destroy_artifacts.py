@@ -272,6 +272,8 @@ def destroy_artifacts():
         if undeleted_paths_dict[artifact_path].name in [d.name for d in __duplicates__]:
             print "Not deleting duplicate: " + artifact_path
             continue
+        if not os.path.isdir(artifact_path):
+            continue
         print "Deleting " + str(artifact_path)
         try:
             cleaned_byte_count = path.get_tree_size(artifact_path) + cleaned_byte_count
@@ -279,8 +281,7 @@ def destroy_artifacts():
             print str(e)
         if not IS_DRY_RUN:
             try:
-                if os.path.isdir(artifact_path):
-                    shutil.rmtree(str(artifact_path), ignore_errors=False)
+                shutil.rmtree(str(artifact_path), ignore_errors=False)
             except OSError as e:
                 print "WARNING: Unable to delete " + artifact_path + " due to:"
                 print str(e)
