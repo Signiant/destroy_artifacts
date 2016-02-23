@@ -279,7 +279,8 @@ def destroy_artifacts():
             print str(e)
         if not IS_DRY_RUN:
             try:
-                shutil.rmtree(str(artifact_path), ignore_errors=False)
+                if os.path.isdir(artifact_path):
+                    shutil.rmtree(str(artifact_path), ignore_errors=False)
             except OSError as e:
                 print "WARNING: Unable to delete " + artifact_path + " due to:"
                 print str(e)
