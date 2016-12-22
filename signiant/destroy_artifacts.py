@@ -104,6 +104,8 @@ def __enumerate_remote_artifact_config_entries__(jobs_path):
     if DEBUG:
         print "jobs_path: " + str(jobs_path)
     for root, dirnames, filenames in os.walk(jobs_path):
+        if DEBUG:
+            print "reading filename " + str(dirnames)
         if "config.xml" in filenames:
             if DEBUG:
                 print "Found config.xml at " + str(dirnames)
@@ -111,7 +113,7 @@ def __enumerate_remote_artifact_config_entries__(jobs_path):
                 #print root
                 yield parse_build_into_environment_variable_job_entry(root)
             except InvalidEntryError as e:
-                if VERBOSE == 1:
+                if VERBOSE:
                     print "Skipping over " + str(root)
 
 def __parse_config__(config_file_path):
