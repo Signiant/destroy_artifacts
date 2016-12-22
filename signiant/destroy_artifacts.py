@@ -101,8 +101,12 @@ def __enumerate_remote_artifact_config_entries__(jobs_path):
     """
     Loop through the found config.xml files and return their folder path
     """
+    if DEBUG:
+        print "jobs_path: " + str(jobs_path)
     for root, dirnames, filenames in os.walk(jobs_path):
         if "config.xml" in filenames:
+            if DEBUG:
+                print "Found config.xml at " + str(dirnames)
             try:
                 #print root
                 yield parse_build_into_environment_variable_job_entry(root)
