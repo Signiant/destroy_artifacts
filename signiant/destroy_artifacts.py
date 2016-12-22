@@ -272,6 +272,8 @@ def destroy_artifacts():
         if entry.disabled is True:
             continue
         try:
+            if DEBUG:
+                print "Found Build " + str(entry.get_build_number_list())
             __verify_environment_variables__(entry)
             __verify_duplicates__(entry)
             release_paths = __get_release_path_list__(entry)
