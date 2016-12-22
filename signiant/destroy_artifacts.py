@@ -206,12 +206,22 @@ def __parse_arguments__():
     Currently unused and uses defaults defined above
     """
     global IS_DRY_RUN
+    global VERBOSE
+    global DEBUG
     try:
         if sys.argv[1] == "-n" or sys.argv[1] == "--dry-run":
             IS_DRY_RUN = True
     except IndexError:
         #Not a dry run..
         pass
+    #will put multiple arguement parsing in later
+    try:
+        if sys.argv[1] == "-d" or sys.argv[1] == "--debug":
+            VERBOSE = True
+            DEBUG = True
+    except IndexError:
+        #Not a debug/verbose
+        pass    
 
 def __strip_release_path__(release_path, environment_variables):
     """
