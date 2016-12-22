@@ -104,11 +104,9 @@ def __enumerate_remote_artifact_config_entries__(jobs_path):
     if DEBUG:
         print "jobs_path: " + str(jobs_path)
     for root, dirnames, filenames in os.walk(jobs_path):
-        if DEBUG:
-            print "reading filename " + str(dirnames)
         if "config.xml" in filenames:
             if DEBUG:
-                print "Found config.xml at " + str(dirnames)
+                print "Found config.xml at " + str(filenames)
             try:
                 #print root
                 yield parse_build_into_environment_variable_job_entry(root)
@@ -267,6 +265,8 @@ def destroy_artifacts():
         if DEBUG:
             print "entry: " + str(entry)
         if entry.get_build_number_list() is None or len(entry.builds_in_jenkins) == 0:
+            if DEBUG:
+                print "No builds found"
             continue
         #Skip disabled entries
         if entry.disabled is True:
