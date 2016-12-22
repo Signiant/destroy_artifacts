@@ -217,11 +217,12 @@ def __parse_arguments__():
     #will put multiple arguement parsing in later
     try:
         if sys.argv[1] == "-d" or sys.argv[1] == "--debug":
+            print "Debug is on"
             VERBOSE = True
             DEBUG = True
     except IndexError:
         #Not a debug/verbose
-        pass    
+        pass
 
 def __strip_release_path__(release_path, environment_variables):
     """
@@ -252,10 +253,13 @@ def destroy_artifacts():
 
     #Set containing ALL the paths to be deleted
     undeleted_paths_dict = dict()
-
+    if DEBUG:
+        print "Evalutating path"
     #First we want to go through the config entries that contain Environment Variables from envinject
     for entry in __enumerate_remote_artifact_config_entries__(JENKINS_JOBS_DIRECTORY_PATH):
         #Safety net... if there's NO builds, we shouldn't clean anything up
+        if DEBUG:
+            print "entry: " + str(entry)
         if entry.get_build_number_list() is None or len(entry.builds_in_jenkins) == 0:
             continue
         #Skip disabled entries
@@ -279,6 +283,8 @@ def destroy_artifacts():
 
     #Loop through the (now) unique path list so we can get the size and delete
     for artifact_path in undeleted_paths_dict.keys():
+        if DEBUG:
+            print "artifact_oath: " + str(artifact_oath)
         if undeleted_paths_dict[artifact_path].name in [d.name for d in __duplicates__]:
             print "Not deleting duplicate: " + artifact_path
             continue
