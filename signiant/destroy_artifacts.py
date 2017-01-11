@@ -318,9 +318,19 @@ def destroy_artifacts():
     if len(__duplicates__) > 0:
         print "The job failed because of the following errors:"
         for duplicate in __duplicates__:
-            key = str(duplicate.environment_variables["PROJECT_FAMILY"] + "/" + duplicate.environment_variables["PROJECT_TITLE"] + "/" + duplicate.environment_variables["PROJECT_BRANCH"])
+            key = __compute_dupe_key__(duplicate)
             print "Attempted to parse entry with name '" + str(duplicate.name) + "' but entry with name '" + str(__duplicate_tracker__[key].name) + "' is currently using the same deployment strategy: " + key
         sys.exit(1)
+
+def __compute_dupe_key__(entry):
+  key = ''
+
+  if 'PROJECT_PLATFORM' in entry.environment_variables.keys():
+    key = str(entry.environment_variables["PROJECT_FAMILY"] + "/" + entry.environment_variables["PROJECT_TITLE"] + "/" + entry.environment_variables["PROJECT_BRANCH"] + "/" + entry.environment_variables["PROJECT_PLATFORM"])
+  else:
+    key = str(entry.environment_variables["PROJECT_FAMILY"] + "/" + entry.environment_variables["PROJECT_TITLE"] + "/" + entry.environment_variables["PROJECT_BRANCH"])
+
+  return key
 
 #TODO: Make less Signiant specific
 def __verify_duplicates__(entry):
@@ -328,7 +338,8 @@ def __verify_duplicates__(entry):
     global __duplicates__
 
     # Key is all environment variables seperated by a colon
-    key = str(entry.environment_variables["PROJECT_FAMILY"] + "/" + entry.environment_variables["PROJECT_TITLE"] + "/" + entry.environment_variables["PROJECT_BRANCH"])
+    key = __compute_dupe_key__(entry)
+
     #Check for duplicate
     if key in __duplicate_tracker__.keys():
         __duplicates__.append(entry)
