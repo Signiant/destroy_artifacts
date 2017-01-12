@@ -10,12 +10,14 @@ reload(sys)
 sys.setdefaultencoding('utf8')
 
 from getopt import getopt,GetoptError
-from argparse import ArgumentParser
+import argparse
 from ConfigParser import RawConfigParser
-from maestro.jenkins.jobs import EnvironmentVariableJobEntry, InvalidEntryError, parse_build_into_environment_variable_job_entry
-from maestro.tools import string, path
+#from maestro.jenkins.jobs import EnvironmentVariableJobEntry, InvalidEntryError, parse_build_into_environment_variable_job_entry
+#from maestro.tools import string, path
 
 ## Globals used throughout the script
+
+parser = argparse.ArgumentParser(prog='destroy_artifacts')
 
 VERBOSE = False
 DEBUG = False
@@ -154,10 +156,12 @@ def __parse_config__(config_file_path):
         SPLIT_TOKEN = config.get("ArtifactConfig","SPLIT_TOKEN")
     except:
         raise
-    try:
-        PREPEND_STRING = config.get("ArtifactConfig","PREPEND_STRING")
-    except:
-        raise
+    #check to see if already configured on command line arg:
+    if not PREPEND_STRING:
+        try:
+            PREPEND_STRING = config.get("ArtifactConfig","PREPEND_STRING")
+        except:
+            raise
     try:
         APPEND_STRING = config.get("ArtifactConfig","APPEND_STRING")
     except:
@@ -212,21 +216,28 @@ def __parse_arguments__():
     global IS_DRY_RUN
     global VERBOSE
     global DEBUG
-    try:
-        if sys.argv[1] == "-n" or sys.argv[1] == "--dry-run":
-            IS_DRY_RUN = True
-    except IndexError:
-        #Not a dry run..
-        pass
-    #will put multiple arguement parsing in later
-    try:
-        if sys.argv[1] == "-d" or sys.argv[1] == "--debug":
-            print "Debug is on"
-            VERBOSE = True
-            DEBUG = True
-    except IndexError:
-        #Not a debug/verbose
-        pass
+    global parser
+    global PREPEND_STRING
+    global CONFIG_PATH
+
+    parser.add_argument('-n','--dry-run',action='store_true',help="Does a dry run of the cleaner")
+    parser.add_argument('-p','--prepend',type=str, help="Where PREPEND is a string of the release share prefix")
+    parser.add_argument('-d','--debug',action='store_true',help="Run with verbose debugging")
+    parser.add_argument('-c','--config',type=str, help="config file path")
+    args = parser.parse_args()
+
+    print str(args)
+
+    if args.dry_run:
+        IS_DRY_RUN = True
+    if args.debug:
+        print "Debug is on"
+        VERBOSE = True
+        DEBUG = True
+    if args.prepend:
+        PREPEND_STRING=args.prepend
+    if args.config:
+        CONFIG_PATH=args.config
 
 def __strip_release_path__(release_path, environment_variables):
     """
@@ -243,11 +254,12 @@ def __strip_release_path__(release_path, environment_variables):
         return None
 
 def destroy_artifacts():
-    if not os.path.exists(CONFIG_PATH):
-        raise ValueError("You need to provide a valid config file! Currently looking for: " + str(CONFIG_PATH))
 
     #Parse arguments
     __parse_arguments__()
+
+    if not os.path.exists(CONFIG_PATH):
+        raise ValueError("You need to provide a valid config file! Currently looking for: " + str(CONFIG_PATH))
 
     #Parse config file
     __parse_config__(CONFIG_PATH)
