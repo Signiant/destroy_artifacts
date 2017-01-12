@@ -12,8 +12,8 @@ sys.setdefaultencoding('utf8')
 from getopt import getopt,GetoptError
 import argparse
 from ConfigParser import RawConfigParser
-#from maestro.jenkins.jobs import EnvironmentVariableJobEntry, InvalidEntryError, parse_build_into_environment_variable_job_entry
-#from maestro.tools import string, path
+from maestro.jenkins.jobs import EnvironmentVariableJobEntry, InvalidEntryError, parse_build_into_environment_variable_job_entry
+from maestro.tools import string, path
 
 ## Globals used throughout the script
 
