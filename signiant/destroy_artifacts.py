@@ -226,8 +226,6 @@ def __parse_arguments__():
     parser.add_argument('-c','--config',type=str, help="config file path")
     args = parser.parse_args()
 
-    print str(args)
-
     if args.dry_run:
         IS_DRY_RUN = True
     if args.debug:
