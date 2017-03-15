@@ -111,7 +111,8 @@ def __enumerate_remote_artifact_config_entries__(jobs_path):
                 print "Found config.xml at " + str(filenames)
             try:
                 #print root
-                yield parse_build_into_environment_variable_job_entry(root)
+                if not 'promotions' in root:
+                    yield parse_build_into_environment_variable_job_entry(root)
             except InvalidEntryError as e:
                 if VERBOSE:
                     print "Skipping over " + str(root)
