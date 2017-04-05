@@ -113,6 +113,9 @@ def __enumerate_remote_artifact_config_entries__(jobs_path):
                 #print root
                 if not 'promotions' in root:
                     yield parse_build_into_environment_variable_job_entry(root)
+                else:
+                    if VERBOSE:
+                        print "Skipping over " + str(root) + ' - PROMOTION Job'
             except InvalidEntryError as e:
                 if VERBOSE:
                     print "Skipping over " + str(root)
