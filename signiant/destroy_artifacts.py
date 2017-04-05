@@ -303,7 +303,7 @@ def destroy_artifacts():
     #Loop through the (now) unique path list so we can get the size and delete
     for artifact_path in undeleted_paths_dict.keys():
         if DEBUG:
-            print "artifact_oath: " + str(artifact_oath)
+            print "artifact_path: " + str(artifact_path)
         if undeleted_paths_dict[artifact_path].name in [d.name for d in __duplicates__]:
             print "Not deleting duplicate: " + artifact_path
             continue
