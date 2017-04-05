@@ -108,7 +108,7 @@ def __enumerate_remote_artifact_config_entries__(jobs_path):
     for root, dirnames, filenames in os.walk(jobs_path):
         if "config.xml" in filenames:
             if DEBUG:
-                print "Found config.xml at " + str(filenames)
+                print "Found config.xml at " + str(root)
             try:
                 #print root
                 if not 'promotions' in root:
