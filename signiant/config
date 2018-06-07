@@ -3,8 +3,8 @@
 # Seperate values with commas. It's pretty rudimentary, so don't expect miracles
 #
 # ENVIRONMENT_VARIABLES = Required environment variables to determine artifact paths. If any of these don't exist the job will be skipped over.
-# DEPLOYMENT_PATHS = The paths that a build MAY be deployed to. It will have a regex expression that will try to replace any string with $ infront of it with an environment variable value.
-# DEPLOYMENT_STRUCUTURES = The build folder string
+# DEPLOYMENT_PATHS = The paths that a build MAY be deployed to. It will have a regex expression that will try to replace any string with $ in front of it with an environment variable value.
+# DEPLOYMENT_STRUCTURES = The build folder string
 # IGNORE_JOBS = Job names included in here will be skipped (CURRENTLY NOT IMPLEMENTED)
 # SPLIT_TOKEN = The token which to split a deployment path on. It should be something common
 ###
