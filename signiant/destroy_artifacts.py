@@ -22,7 +22,7 @@ parser = argparse.ArgumentParser(prog='destroy_artifacts')
 VERBOSE = False
 DEBUG = False
 
-IGNORED_PATH = []
+IGNORED_PATHS = []
 
 # ARG: Which Jenkins instance are we targetting?
 JENKINS_JOBS_DIRECTORY_PATH = "/var/lib/jenkins/jobs"
