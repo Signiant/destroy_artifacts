@@ -271,6 +271,13 @@ def __verify_duplicates__(entry):
 
     if key in IGNORED_PATH:
         return
+
+
+    for path in IGNORED_PATH:
+        if path in key:
+            print "Artifact path in ignore list, skipping delete: "  + artifact_path
+            continue
+
     # Check for duplicate
     if key in __duplicate_tracker__.keys():
         __duplicates__.append(entry)
