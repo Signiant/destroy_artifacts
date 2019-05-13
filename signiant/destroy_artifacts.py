@@ -22,7 +22,7 @@ parser = argparse.ArgumentParser(prog='destroy_artifacts')
 VERBOSE = False
 DEBUG = False
 
-IGNORED_KEYS = []
+IGNORED_PATH = []
 
 # ARG: Which Jenkins instance are we targetting?
 JENKINS_JOBS_DIRECTORY_PATH = "/var/lib/jenkins/jobs"
@@ -261,6 +261,7 @@ def __verify_duplicates__(entry):
     # TODO: Make less Signiant specific
     global __duplicate_tracker__
     global __duplicates__
+    global __igored__
 
     # Key is all environment variables seperated by a colon
     key = __compute_dupe_key__(entry)
@@ -268,7 +269,7 @@ def __verify_duplicates__(entry):
     if DEBUG:
         print "key: " + str(key)
 
-    if key in IGNORED_KEYS:
+    if key in IGNORED_PATH:
         return
     # Check for duplicate
     if key in __duplicate_tracker__.keys():
@@ -310,7 +311,7 @@ def __parse_arguments__():
         CONFIG_PATH=args.config
 
     if args.ignored:
-        IGNORED_KEYS = args.ignored
+        IGNORED_PATH = args.ignored
 
 
 def destroy_artifacts():
@@ -368,6 +369,10 @@ def destroy_artifacts():
         if undeleted_paths_dict[artifact_path].name in [d.name for d in __duplicates__]:
             print "Not deleting duplicate: " + artifact_path
             continue
+        for key in IGNORED_PATH
+            if key in artifact_path:
+                print "Artifact path in ignore list, skipping delete: "  + artifact_path
+                continue
         if not os.path.isdir(artifact_path):
             continue
         print "Deleting " + str(artifact_path)
