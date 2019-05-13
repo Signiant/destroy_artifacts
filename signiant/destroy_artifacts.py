@@ -294,11 +294,11 @@ def __parse_arguments__():
     global parser
     global PREPEND_STRING
     global CONFIG_PATH
-    global IGNORED_KEYS
+    global IGNORED_PATH
 
     parser.add_argument('-n','--dry-run',action='store_true',help="Does a dry run of the cleaner")
     parser.add_argument('-p','--prepend',type=str, help="Where PREPEND is a string of the release share prefix")
-    parser.add_argument('-i', '--ignore', type=str, help="Ignore a", action='append', dest='ignored', required=False)
+    parser.add_argument('-i','--ignore', type=str, help="Ignore a job with specified artifact path", action='append', dest='ignored', required=False)
     parser.add_argument('-d','--debug',action='store_true',help="Run with verbose debugging")
     parser.add_argument('-c','--config',type=str, help="config file path")
     args = parser.parse_args()
