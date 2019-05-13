@@ -267,7 +267,7 @@ def __verify_duplicates__(entry):
 
     if DEBUG:
         print "key: " + str(key)
-        print "IGNORED_PATH: " + str(IGNORED_PATH)
+        print "IGNORED_PATHS: " + str(IGNORED_PATHS)
 
     if any(key in s for s in IGNORED_PATHS):
         return
