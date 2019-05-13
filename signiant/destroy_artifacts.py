@@ -22,6 +22,8 @@ parser = argparse.ArgumentParser(prog='destroy_artifacts')
 VERBOSE = False
 DEBUG = False
 
+IGNORED_KEYS = []
+
 # ARG: Which Jenkins instance are we targetting?
 JENKINS_JOBS_DIRECTORY_PATH = "/var/lib/jenkins/jobs"
 
@@ -266,7 +268,7 @@ def __verify_duplicates__(entry):
     if DEBUG:
         print "key: " + str(key)
 
-    if key in ignored_keys:
+    if key in IGNORED_KEYS:
         return
     # Check for duplicate
     if key in __duplicate_tracker__.keys():
@@ -287,7 +289,7 @@ def __parse_arguments__():
     global parser
     global PREPEND_STRING
     global CONFIG_PATH
-    global ignored_keys
+    global IGNORED_KEYS
 
     parser.add_argument('-n','--dry-run',action='store_true',help="Does a dry run of the cleaner")
     parser.add_argument('-p','--prepend',type=str, help="Where PREPEND is a string of the release share prefix")
@@ -308,7 +310,7 @@ def __parse_arguments__():
         CONFIG_PATH=args.config
 
     if args.ignored:
-        ignored_keys = args.ignored
+        IGNORED_KEYS = args.ignored
 
 
 def destroy_artifacts():
