@@ -267,7 +267,7 @@ def __verify_duplicates__(entry):
 
     if DEBUG:
         print "key: " + str(key)
-        print "IGNORED_PATHS: " + str(IGNORED_PATHS)
+        print "IGNORED_PATHS: " + str(IGNORED_PATH)
 
     if any(key in s for s in IGNORED_PATHS):
         return
@@ -360,7 +360,7 @@ def destroy_artifacts():
             continue
         # If the job doesn't have the variables we're looking for, skip over it
         except InvalidEntryError as e:
-            # print str(e)
+            print str(e)
             continue
 
     # Loop through the (now) unique path list so we can get the size and delete
