@@ -268,13 +268,10 @@ def __verify_duplicates__(entry):
 
     if DEBUG:
         print "key: " + str(key)
-
-    if key in IGNORED_PATH:
-        return
-
+        print "IGORNED_PATH: " + str(IGNORED_PATH)
 
     for path in IGNORED_PATH:
-        if path in key:
+        if key in path:
             print "Artifact path in ignore list, skipping delete: "  + artifact_path
             continue
 
