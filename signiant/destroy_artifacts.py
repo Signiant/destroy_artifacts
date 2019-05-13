@@ -366,6 +366,7 @@ def destroy_artifacts():
     for artifact_path in undeleted_paths_dict.keys():
         if DEBUG:
             print "artifact_path: " + str(artifact_path)
+            print "IGORNED_PATH: " + str(IGNORED_PATH)
         if undeleted_paths_dict[artifact_path].name in [d.name for d in __duplicates__]:
             print "Not deleting duplicate: " + artifact_path
             continue
