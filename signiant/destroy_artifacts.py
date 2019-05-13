@@ -261,18 +261,16 @@ def __verify_duplicates__(entry):
     # TODO: Make less Signiant specific
     global __duplicate_tracker__
     global __duplicates__
-    global __igored__
 
     # Key is all environment variables seperated by a colon
     key = __compute_dupe_key__(entry)
 
     if DEBUG:
         print "key: " + str(key)
-        print "IGORNED_PATH: " + str(IGNORED_PATH)
+        print "IGNORED_PATH: " + str(IGNORED_PATH)
 
-    for path in IGNORED_PATH:
-        if key in path:
-            return
+    if any(key in s for s in IGNORED_PATHS):
+        return
 
     # Check for duplicate
     if key in __duplicate_tracker__.keys():
@@ -293,7 +291,7 @@ def __parse_arguments__():
     global parser
     global PREPEND_STRING
     global CONFIG_PATH
-    global IGNORED_PATH
+    global IGNORED_PATHS
 
     parser.add_argument('-n','--dry-run',action='store_true',help="Does a dry run of the cleaner")
     parser.add_argument('-p','--prepend',type=str, help="Where PREPEND is a string of the release share prefix")
@@ -314,7 +312,7 @@ def __parse_arguments__():
         CONFIG_PATH=args.config
 
     if args.ignored:
-        IGNORED_PATH = args.ignored
+        IGNORED_PATHS = args.ignored
 
 
 def destroy_artifacts():
@@ -369,11 +367,11 @@ def destroy_artifacts():
     for artifact_path in undeleted_paths_dict.keys():
         if DEBUG:
             print "artifact_path: " + str(artifact_path)
-            print "IGORNED_PATH: " + str(IGNORED_PATH)
+            print "IGNORED_PATHS: " + str(IGNORED_PATHS)
         if undeleted_paths_dict[artifact_path].name in [d.name for d in __duplicates__]:
             print "Not deleting duplicate: " + artifact_path
             continue
-        for key in IGNORED_PATH:
+        for key in IGNORED_PATHS:
             if key in artifact_path:
                 print "Artifact path in ignore list, skipping delete: "  + artifact_path
                 continue
