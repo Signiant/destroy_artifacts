@@ -263,6 +263,8 @@ def __verify_duplicates__(entry):
     # Key is all environment variables seperated by a colon
     key = __compute_dupe_key__(entry)
 
+    if DEBUG:
+        print "key: " + str(key)
     # Check for duplicate
     if key in __duplicate_tracker__.keys():
         __duplicates__.append(entry)
