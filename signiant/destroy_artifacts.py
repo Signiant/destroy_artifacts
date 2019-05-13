@@ -272,7 +272,7 @@ def __verify_duplicates__(entry):
 
     for path in IGNORED_PATH:
         if key in path:
-            continue
+            return
 
     # Check for duplicate
     if key in __duplicate_tracker__.keys():
