@@ -22,6 +22,8 @@ parser = argparse.ArgumentParser(prog='destroy_artifacts')
 VERBOSE = False
 DEBUG = False
 
+IGNORED_PATHS = []
+
 # ARG: Which Jenkins instance are we targetting?
 JENKINS_JOBS_DIRECTORY_PATH = "/var/lib/jenkins/jobs"
 
@@ -263,6 +265,13 @@ def __verify_duplicates__(entry):
     # Key is all environment variables seperated by a colon
     key = __compute_dupe_key__(entry)
 
+    if DEBUG:
+        print "key: " + str(key)
+        print "IGNORED_PATHS: " + str(IGNORED_PATHS)
+
+    if any(key in s for s in IGNORED_PATHS):
+        return
+
     # Check for duplicate
     if key in __duplicate_tracker__.keys():
         __duplicates__.append(entry)
@@ -282,9 +291,11 @@ def __parse_arguments__():
     global parser
     global PREPEND_STRING
     global CONFIG_PATH
+    global IGNORED_PATHS
 
     parser.add_argument('-n','--dry-run',action='store_true',help="Does a dry run of the cleaner")
     parser.add_argument('-p','--prepend',type=str, help="Where PREPEND is a string of the release share prefix")
+    parser.add_argument('-i','--ignore', type=str, help="Ignore a job with specified artifact path", action='append', dest='ignored', required=False)
     parser.add_argument('-d','--debug',action='store_true',help="Run with verbose debugging")
     parser.add_argument('-c','--config',type=str, help="config file path")
     args = parser.parse_args()
@@ -299,6 +310,9 @@ def __parse_arguments__():
         PREPEND_STRING=args.prepend
     if args.config:
         CONFIG_PATH=args.config
+
+    if args.ignored:
+        IGNORED_PATHS = args.ignored
 
 
 def destroy_artifacts():
@@ -346,16 +360,21 @@ def destroy_artifacts():
             continue
         # If the job doesn't have the variables we're looking for, skip over it
         except InvalidEntryError as e:
-            # print str(e)
+            print str(e)
             continue
 
     # Loop through the (now) unique path list so we can get the size and delete
     for artifact_path in undeleted_paths_dict.keys():
         if DEBUG:
             print "artifact_path: " + str(artifact_path)
+            print "IGNORED_PATHS: " + str(IGNORED_PATHS)
         if undeleted_paths_dict[artifact_path].name in [d.name for d in __duplicates__]:
             print "Not deleting duplicate: " + artifact_path
             continue
+        for key in IGNORED_PATHS:
+            if key in artifact_path:
+                print "Artifact path in ignore list, skipping delete: "  + artifact_path
+                continue
         if not os.path.isdir(artifact_path):
             continue
         print "Deleting " + str(artifact_path)
